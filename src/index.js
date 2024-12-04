@@ -140,9 +140,34 @@ async function getTopics() {
     }
 
 
+
+    async function updateTopicById(request) {
+        const body = request.JSON();
+        let {id,topicTitle,topicContent} = body;
+        const query = `
+        UPDATE FROM topics
+        SET topic_title = ? , topic_content = ?
+        WHERE id = ?
+        `;
+
+        await db.prepare(query).bind(topicTitle,topicContent,id).run();
+        
+        return new Response(JSON.stringify(body), { 
+            status: 200,
+            headers: {
+              'Access-Control-Allow-Origin': '*', // 设置CORS头
+              'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS', // 允许的方法
+              'Access-Control-Allow-Headers': 'Content-Type' // 允许的头
+            }
+          });
+
+
+    }
+    
+
     async function updateTodoRecordById(request) {
         const body = await request.json();
-        const { id, todoTitle,todoContent,topicTitle,todoStatus,deadline } = body;
+        const { id, todoTitle,todoContent,topicId,todoStatus,deadline } = body;
         if (id === undefined || todoStatus === undefined) {
           return new Response(JSON.stringify({ error: 'Invalid data' }), { 
             status: 400,
@@ -158,10 +183,10 @@ async function getTopics() {
         //防止将topic改为不存在的值
         const query0 = `
           SELECT * FROM topics
-          WHERE topic_title = ?
+          WHERE topic_Id = ?
         `;
 
-        const { results } = await db.prepare(query0).all();
+        const { results } = await db.prepare(query0).bind(topicId).all();
         const data = { topics: results };
 
         if (data.topics.length === 0){
@@ -178,10 +203,10 @@ async function getTopics() {
 
         const query = `
           UPDATE todos 
-          SET todo_status = ?,todo_title = ?,todo_content = ?,topic_title = ?,deadline = ?
+          SET todo_status = ?,todo_title = ?,todo_content = ?,topic_Id = ?,deadline = ?
           WHERE id = ?
         `;
-        await db.prepare(query).bind(todoStatus ? 1 : 0,todoTitle,todoContent,topicTitle,deadline, id).run(); // 将布尔值转换为整数
+        await db.prepare(query).bind(todoStatus ? 1 : 0,todoTitle,todoContent,topicId,deadline, id).run(); // 将布尔值转换为整数
   
         return new Response(JSON.stringify(body), { 
           status: 200,
@@ -195,7 +220,7 @@ async function getTopics() {
 
     async function addTodo(request) {
       const body = await request.json();
-      let { todoTitle, todoContent, todoStatus ,topicTitle,deadline} = body;
+      let { todoTitle, todoContent, todoStatus ,topicId,deadline} = body;
       todoTitle = String(todoTitle);
       todoContent = String(todoContent);
       todoStatus = todoStatus ? 1 : 0; // 将布尔值转换为整数
@@ -209,11 +234,11 @@ async function getTopics() {
       let maxId = data.todos.length === 0 ? 1 : Math.max(...data.todos.map(todo => todo.id)) + 1;
 
       const query = `
-        INSERT INTO todos (id, todo_title, todo_content, todo_status, topic_title,deadline)
+        INSERT INTO todos (id, todo_title, todo_content, todo_status, topic_Id,deadline)
         VALUES (?, ?, ?, ?, ?,?)
       `;
-      await db.prepare(query).bind(maxId, todoTitle, todoContent, todoStatus,topicTitle,deadline).run();
-      const newTodo = { id: maxId, todoTitle:todoTitle, todoContent: todoContent, todoStatus: !!todoStatus ,topicTitle:topicTitle,deadline:deadline};
+      await db.prepare(query).bind(maxId, todoTitle, todoContent, todoStatus,topicId,deadline).run();
+      const newTodo = { id: maxId, todoTitle:todoTitle, todoContent: todoContent, todoStatus: !!todoStatus ,topicId:topicId,deadline:deadline};
       return new Response(JSON.stringify(newTodo), { 
         status: 200,
         headers: {
@@ -250,7 +275,7 @@ async function getTopics() {
         const query0 = `
           SELECT * FROM todos
           JOIN ON topics
-          WHERE topics.topic_title = todos.topic_title AND topics.id = ?
+          WHERE topics.id = todos.topic_Id AND topics.id = ?
         `;
 
         const {results} = await db.prepare(query0).bind(id).run();
@@ -304,7 +329,9 @@ async function getTopics() {
       return updateTodoStatusById(request);
     } else if (request.method === 'PUT' && pathname === '/todos') {
       return updateTodoRecordById(request);
-    } else if (request.method === 'DELETE' && pathname === '/todos') {
+    } else if (request.method === 'PUT' && pathname === 'topics'){
+        return updateTopicById(request);
+    }else if (request.method === 'DELETE' && pathname === '/todos') {
       return deleteTodoById(request);
     } else if (request.method === 'DELETE' && pathname === '/topics') {
       return deleteTopicById(request);

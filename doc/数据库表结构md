@@ -25,7 +25,7 @@
 | todo_title   | string | 待办事项文本        |              |     |
 |              |        |               |              |     |
 | deadline     | date   |      可以为空         | 未来将要实现的功能   |     |
-| topic_name   | string | 外键，指向 topics表 | 作为新的外键，更符合要求 |     |
+| topic_id   | int | 外键，指向 topics表 | 作为新的外键，更符合要求 |     |
 | todo_content | string | 代办事项具体内容      |              |     |
 | todo_status  | int | 此项任务的完成情况     |              |     |
 
@@ -34,6 +34,6 @@ todo{
     todoTitle:string,
     todoContent:string,
     todoStatus:int,
-    topicTitle:string,
+    topicId:int,
     deadline:date
 }
