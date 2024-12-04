@@ -7,16 +7,18 @@ export default {
     async function getTodosAll() {
       const query = 'SELECT * FROM todos';
       const { results } = await db.prepare(query).all();
+      console.log({results});
       const data = {
         todos: results?.map(todo => ({
           id: escapeHtml(todo.id),
-          todoTitle: escapeHtml(todo.todoTitle),
-          todoContent: escapeHtml(todo.todoContent),
+          todoTitle: escapeHtml(todo.todo_title),
+          todoContent: escapeHtml(todo.todo_content),
+          topicId : escapeHtml(todo.topic_id),
           deadline: escapeHtml(todo.deadline),
           todoStatus: !!todo.todoStatus // 将整数转换为布尔值
         })) ?? []
       };
-
+      console.log(data);
       return new Response(JSON.stringify(data), {
         headers: {
           'Content-Type': 'application/json',
@@ -28,7 +30,7 @@ export default {
       });
     }
     async function getTodosByTopic(request) {
-        const body = await request.JSON();
+        const body = await request.json();
         let {id} = body;
         const query = `
         SELECT * FROM todos 
@@ -38,10 +40,10 @@ export default {
         const data = {
             todos: results?.map(todo => ({
               id: escapeHtml(todo.id),
-              todoTitle: escapeHtml(todo.todoTitle),
-              todoContent: escapeHtml(todo.todoContent),
+              todoTitle: escapeHtml(todo.todo_title),
+              todoContent: escapeHtml(todo.todo_content),
               deadline: escapeHtml(todo.deadline),
-              todoStatus: !!todo.todoStatus // 将整数转换为布尔值
+              todoStatus: !!todo.todo_status // 将整数转换为布尔值
             })) ?? []
           };
 
@@ -63,8 +65,8 @@ async function getTopics() {
     const data = {
         topics: results?.map(topic => ({
           id: escapeHtml(topic.id),
-          topicTitle: escapeHtml(topic.topicTitle),
-          topicContent: escapeHtml(topic.topicContent),
+          topicTitle: escapeHtml(topic.topic_title),
+          topicContent: escapeHtml(topic.topic_content),
         })) ?? []
       };
 
@@ -80,13 +82,15 @@ async function getTopics() {
 }
 
     async function addTopic(request) {
-        const body = request.JSON();
+        const body =await request.json();
+        //console.log(body);
         let {topicTitle,topicContent} = body;
-
+        topicTitle = String(topicTitle);
+        topicContent = String(topicContent);
         const query0 = 'SELECT * FROM topics';
         const { results } = await db.prepare(query0).all();
         const data = { topics: results };
-        
+        //console.log(data);
         let maxId = data.topics.length === 0 ? 1 : Math.max(...data.topics.map(topic => topic.id)) + 1;
 
         const query = `INSERT INTO topics (id,topic_title,topic_content)
@@ -110,7 +114,9 @@ async function getTopics() {
 
     async function updateTodoStatusById(request) {
       const body = await request.json();
+      console.log(body);
       const { id, todoStatus } = body;
+      
       if (id === undefined || todoStatus === undefined) {
         return new Response(JSON.stringify({ error: 'Invalid data' }), { 
           status: 400,
@@ -142,7 +148,7 @@ async function getTopics() {
 
 
     async function updateTopicById(request) {
-        const body = request.JSON();
+        const body = request.json();
         let {id,topicTitle,topicContent} = body;
         const query = `
         UPDATE FROM topics
@@ -168,6 +174,7 @@ async function getTopics() {
     async function updateTodoRecordById(request) {
         const body = await request.json();
         const { id, todoTitle,todoContent,topicId,todoStatus,deadline } = body;
+        console.log(body);
         if (id === undefined || todoStatus === undefined) {
           return new Response(JSON.stringify({ error: 'Invalid data' }), { 
             status: 400,
@@ -183,7 +190,7 @@ async function getTopics() {
         //防止将topic改为不存在的值
         const query0 = `
           SELECT * FROM topics
-          WHERE topic_Id = ?
+          WHERE id = ?
         `;
 
         const { results } = await db.prepare(query0).bind(topicId).all();
@@ -274,14 +281,15 @@ async function getTopics() {
         const { id } = body;
         const query0 = `
           SELECT * FROM todos
-          JOIN ON topics
-          WHERE topics.id = todos.topic_Id AND topics.id = ?
+          JOIN topics ON topics.id = todos.topic_Id
+          WHERE topics.id = ?
         `;
 
         const {results} = await db.prepare(query0).bind(id).run();
         const data = {topics : results};
+
         let count = data.topics.length;
-        if (count === 0){
+        if (count > 0){
             return new Response(JSON.stringify({ error: 'Topic is not empty' }), { 
                 status: 400,
                 headers: {

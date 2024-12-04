@@ -15,6 +15,14 @@
     topicDescription:string
 }
 
+```sql
+CREATE TABLE "topics" (
+	"id"	INTEGER,
+	"topic_title"	TEXT,
+	"topic_content"	TEXT
+);
+```
+
 #### 2. `todos` 表：
 
 这个表用于存储待办事项的信息，同时将每个待办事项与所属的主题关联起来。
@@ -37,3 +45,15 @@ todo{
     topicId:int,
     deadline:date
 }
+
+```sql
+CREATE TABLE "todos" (
+	"id"	INTEGER,
+	"todo_title"	TEXT,
+	"todo_content"	TEXT,
+	"todo_status"	INTEGER,
+	"topic_id"	INTEGER,
+	"deadline"	TEXT
+);
+```
+
