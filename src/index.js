@@ -142,7 +142,7 @@ async function getTopics() {
 
     async function updateTodoRecordById(request) {
         const body = await request.json();
-        const { id, todoTitle,todoContent,topicTitle,todoStatus } = body;
+        const { id, todoTitle,todoContent,topicTitle,todoStatus,deadline } = body;
         if (id === undefined || todoStatus === undefined) {
           return new Response(JSON.stringify({ error: 'Invalid data' }), { 
             status: 400,
@@ -178,10 +178,10 @@ async function getTopics() {
 
         const query = `
           UPDATE todos 
-          SET todo_status = ?,todo_title = ?,todo_content = ?,topic_title = ?
+          SET todo_status = ?,todo_title = ?,todo_content = ?,topic_title = ?,deadline = ?
           WHERE id = ?
         `;
-        await db.prepare(query).bind(todoStatus ? 1 : 0,todoTitle,todoContent,topicTitle, id).run(); // 将布尔值转换为整数
+        await db.prepare(query).bind(todoStatus ? 1 : 0,todoTitle,todoContent,topicTitle,deadline, id).run(); // 将布尔值转换为整数
   
         return new Response(JSON.stringify(body), { 
           status: 200,
@@ -195,7 +195,7 @@ async function getTopics() {
 
     async function addTodo(request) {
       const body = await request.json();
-      let { todoTitle, todoContent, todoStatus ,topicTitle} = body;
+      let { todoTitle, todoContent, todoStatus ,topicTitle,deadline} = body;
       todoTitle = String(todoTitle);
       todoContent = String(todoContent);
       todoStatus = todoStatus ? 1 : 0; // 将布尔值转换为整数
@@ -209,11 +209,11 @@ async function getTopics() {
       let maxId = data.todos.length === 0 ? 1 : Math.max(...data.todos.map(todo => todo.id)) + 1;
 
       const query = `
-        INSERT INTO todos (id, todo_title, todo_content, todo_status, topic_title)
-        VALUES (?, ?, ?, ?,?)
+        INSERT INTO todos (id, todo_title, todo_content, todo_status, topic_title,deadline)
+        VALUES (?, ?, ?, ?, ?,?)
       `;
-      await db.prepare(query).bind(maxId, todoTitle, todoContent, todoStatus,topicTitle).run();
-      const newTodo = { id: maxId, todoTitle:todoTitle, todoContent: todoContent, todoStatus: !!todoStatus ,topicTitle:topicTitle};
+      await db.prepare(query).bind(maxId, todoTitle, todoContent, todoStatus,topicTitle,deadline).run();
+      const newTodo = { id: maxId, todoTitle:todoTitle, todoContent: todoContent, todoStatus: !!todoStatus ,topicTitle:topicTitle,deadline:deadline};
       return new Response(JSON.stringify(newTodo), { 
         status: 200,
         headers: {
