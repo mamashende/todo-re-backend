@@ -1,4 +1,4 @@
-# Todolist 后端项目
+# Todolist 后端部分
 
 ## 项目概述
 
@@ -55,13 +55,11 @@
 
 详细信息请参考 -[数据库表结构](doc/数据库表结构.md)
 
-
 ## 安装与部署
 
 建议使用cloudflare workers SDK wrangler进行本地开发调试与部署
 
 具体细节可以参考cloudflare的官方workers教程，如下：[https://developers.cloudflare.com/workers/](https://developers.cloudflare.com/workers/)
-
 
 ## 使用注意
 
